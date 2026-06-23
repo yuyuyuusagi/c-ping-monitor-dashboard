@@ -1,0 +1,10 @@
+.vs/
+.vscode/
+__pycache__/
+dist/
+build/
+
+*.exe
+*.log
+*.csv
+*.pyc

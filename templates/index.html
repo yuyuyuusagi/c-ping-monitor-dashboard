@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Ping Monitor Dashboard</title>
+    <meta http-equiv="refresh" content="5">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: radial-gradient(circle at top left, #1e3a8a, #020617 45%);
+            color: #e5e7eb;
+            font-family: "Segoe UI", Arial, sans-serif;
+            padding: 32px;
+        }
+
+        .alert-banner {
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 14px;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 22px;
+            box-shadow: 0 0 24px rgba(239, 68, 68, 0.5);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 36px;
+            color: #38bdf8;
+            letter-spacing: 1px;
+        }
+
+        .badge {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            color: #7dd3fc;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-weight: bold;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .summary-card {
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .summary-title {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .summary-value {
+            font-size: 34px;
+            font-weight: 800;
+        }
+
+        .green {
+            color: #22c55e;
+        }
+
+        .red {
+            color: #ef4444;
+        }
+
+        .yellow {
+            color: #facc15;
+        }
+
+        .blue {
+            color: #38bdf8;
+        }
+
+        .panel {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 22px;
+            padding: 20px;
+            box-shadow: 0 22px 55px rgba(0, 0, 0, 0.38);
+        }
+
+        .table-header,
+        .row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 2fr;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .table-header {
+            color: #94a3b8;
+            font-size: 13px;
+            padding: 0 16px 12px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .row {
+            margin-top: 12px;
+            background: rgba(30, 41, 59, 0.86);
+            border-radius: 16px;
+            padding: 18px 16px;
+            transition: 0.2s;
+        }
+
+            .row:hover {
+                transform: translateY(-2px);
+                background: rgba(51, 65, 85, 0.92);
+            }
+
+        .ok {
+            border-left: 7px solid #22c55e;
+        }
+
+        .ng {
+            border-left: 7px solid #ef4444;
+        }
+
+        .ip {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .status {
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .small {
+            color: #cbd5e1;
+        }
+
+        .footer {
+            margin-top: 18px;
+            color: #64748b;
+            font-size: 13px;
+            text-align: right;
+        }
+
+        @media (max-width: 900px) {
+            .summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .table-header {
+                display: none;
+            }
+
+            .row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% set total = results|length %}
+    {% set ok_count = results.values()|selectattr('状態', 'equalto', 'OK')|list|length %}
+    {% set ng_count = total - ok_count %}
+
+    {% if alerts %}
+    <div class="alert-banner">
+        🚨 ALERT :
+        {% for ip in alerts %}
+        {{ ip }}
+        {% endfor %}
+        が応答していません
+    </div>
+    {% endif %}
+
+    <div class="header">
+        <div>
+            <h1>Ping Monitor Dashboard</h1>
+            <div class="small">C Network Monitoring Tool + Flask Dashboard</div>
+        </div>
+        <div class="badge">Auto Refresh: 5s</div>
+    </div>
+
+    <div class="summary">
+        <div class="summary-card">
+            <div class="summary-title">監視対象</div>
+            <div class="summary-value blue">{{ total }}</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-title">正常</div>
+            <div class="summary-value green">{{ ok_count }}</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-title">異常</div>
+            <div class="summary-value red">{{ ng_count }}</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-title">状態</div>
+            {% if ng_count == 0 %}
+            <div class="summary-value green">GOOD</div>
+            {% else %}
+            <div class="summary-value yellow">ALERT</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="table-header">
+            <div>IP Address</div>
+            <div>Status</div>
+            <div>Response</div>
+            <div>NG Count</div>
+            <div>Last Update</div>
+        </div>
+
+        {% for ip, row in results.items() %}
+        <div class="row {% if row['状態'] == 'OK' %}ok{% else %}ng{% endif %}">
+            <div class="ip">{{ ip }}</div>
+
+            {% if row['状態'] == 'OK' %}
+            <div class="status green">● OK</div>
+            {% else %}
+            <div class="status red">● NG</div>
+            {% endif %}
+
+            <div>
+                {% if row['応答時間ms']|int < 0 %}
+                <span class="red">-</span>
+                {% elif row['応答時間ms']|int < 30 %}
+                <span class="green">{{ row['応答時間ms'] }} ms</span>
+                {% elif row['応答時間ms']|int < 100 %}
+                <span class="yellow">{{ row['応答時間ms'] }} ms</span>
+                {% else %}
+                <span class="red">{{ row['応答時間ms'] }} ms</span>
+                {% endif %}
+            </div>
+
+            <div>{{ row['連続NG回数'] }} 回</div>
+            <div class="small">{{ row['日時'] }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="footer">
+        Generated by C Ping Monitor / Flask Desktop App
+    </div>
+</body>
+</html>
